@@ -1,5 +1,4 @@
 from time import strftime, gmtime
-
 from PIL import Image, ImageDraw, ImageFont
 import random
 import json
