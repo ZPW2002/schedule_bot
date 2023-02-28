@@ -1,5 +1,4 @@
 from time import strftime, gmtime
-
 from PIL import Image, ImageDraw, ImageFont
 import random
 import json
@@ -56,13 +55,12 @@ def thread_schedule_next(ws):
         for item in c.send_target:
             ws.send(data_post(item))
 
-        timer_set()
+        Timer(5, timer_set)
 
     def timer_set():
-        if data := db.next_lesson():
-            interval = data[0] - c.send_before*60
-            Timer(interval, schedule_send, (data[1:], ))
-            f_time = strftime('%Hh %Mm %Ss', gmtime(interval))
+        if data := db.next_lesson(c.send_before):
+            Timer(data[0], schedule_send, (data[1:], ))
+            f_time = strftime('%Hh %Mm %Ss', gmtime(data[0]))
             logger.info(f'Data will be sent after {f_time}')
 
     timer_set()

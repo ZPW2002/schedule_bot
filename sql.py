@@ -1,5 +1,5 @@
 import sqlite3
-from datetime import datetime
+from datetime import datetime, timedelta
 from sqlite3 import IntegrityError
 from data_handle import handle
 from loguru import logger
@@ -49,10 +49,10 @@ class SQLManager:
         log_info = ', '.join(map(str, [time_start, course_range, c_name, teacher, site]))
         logger.success(f'Insert: {log_info}')
 
-    def next_lesson(self):
+    def next_lesson(self, delta: int = 0):
         sql_sc = 'select * from schedule where time_start > ? order by time_start;'
         sql_cou = 'select teacher, site from course where c_name=?'
-        datetime_now = datetime.now()
+        datetime_now = datetime.now() + timedelta(minutes=delta)
         if res := self._exec(sql_sc, (datetime_now, )):
             time_start, course_range, c_name = res
         else:
