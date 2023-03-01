@@ -60,7 +60,7 @@ def thread_schedule_next(ws):
     def timer_set():
         if data := db.next_lesson(c.send_before):
             Timer(data[0], schedule_send, (data[1:], ))
-            f_time = strftime('%Hh %Mm %Ss', gmtime(data[0]))
+            f_time = strftime('%dd %Hh %Mm %Ss', gmtime(data[0]))
             logger.info(f'Data will be sent after {f_time}')
 
     timer_set()
