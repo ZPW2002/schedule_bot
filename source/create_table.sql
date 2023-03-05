@@ -11,3 +11,7 @@ create table schedule
     c_name text,
     foreign key (c_name) references course(c_name)
 );
+create view sel as
+select time_start, course_range, schedule.c_name, teacher, site
+from schedule, course
+where schedule.c_name=course.c_name;

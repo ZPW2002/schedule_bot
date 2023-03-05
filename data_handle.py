@@ -38,7 +38,9 @@ def handle(db):
         # 第几节开始, 第几节结束
         lesson_start, lesson_end = sec, sec + class_len - 1
         # 教室
-        site = ','.join(site_list)
+        site_all = ','.join(site_list)
+        site_list = site_all.split(',')
+        site = f'{site_list[0]}...' if len(site_list) > 1 else site_list[0]
 
         # 都有哪几周上这节课
         week_list = [

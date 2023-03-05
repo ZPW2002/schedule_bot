@@ -1,8 +1,20 @@
 import sqlite3
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, time
 from sqlite3 import IntegrityError
 from data_handle import handle
 from loguru import logger
+
+
+def _exception(fun):
+    def inner(*args, **kwargs):
+        try:
+            return fun(*args, **kwargs)
+        except IntegrityError as e_:
+            logger.warning(f'{fun.__name__}: {e_}')
+        except Exception as e:
+            logger.error(f'{fun.__name__}: {e}')
+
+    return inner
 
 
 class SQLManager:
@@ -15,19 +27,17 @@ class SQLManager:
             logger.error(f'DB initialization failed: {e}')
             exit()
 
+    @_exception
     def _exec(self, *args, **kwargs):
-        try:
-            res = self.cursor.execute(*args, **kwargs).fetchone()
-        except IntegrityError:
-            logger.warning('Primary Key Conflict, Insert canceled!')
-        except Exception as e:
-            logger.error(e)
-        else:
-            return res
+        return self.cursor.execute(*args, **kwargs).fetchone()
+
+    @_exception
+    def _exec_all(self, *args, **kwargs):
+        return self.cursor.execute(*args, **kwargs).fetchall()
 
     def _table_check(self):
         sql = "SELECT name FROM sqlite_master WHERE type='table' "
-        if not self.cursor.execute(sql).fetchall():
+        if not self._exec_all(sql):
             self.cursor.executescript(open('source/create_table.sql').read())
             logger.warning('DataFile not found. Building...')
             if not handle(self):
@@ -42,28 +52,29 @@ class SQLManager:
         sql_exist = 'select * from course where c_name=?;'
 
         self._exec(sql_sc, (time_start, course_range, c_name))
-        if not self._exec(sql_exist, (c_name, )):
+        if not self._exec(sql_exist, (c_name,)):
             self._exec(sql_cou, (c_name, teacher, site))
         self.db.commit()
 
-        log_info = ', '.join(map(str, [time_start, course_range, c_name, teacher, site]))
-        logger.success(f'Insert: {log_info}')
-
     def next_lesson(self, delta: int = 0):
-        sql_sc = 'select * from schedule where time_start > ? order by time_start;'
-        sql_cou = 'select teacher, site from course where c_name=?'
+        sql = 'select * from sel where time_start > ? order by time_start;'
         datetime_now = datetime.now() + timedelta(minutes=delta)
-        if res := self._exec(sql_sc, (datetime_now, )):
-            time_start, course_range, c_name = res
+        if res := self._exec(sql, (datetime_now,)):
+            time_start, course_range, c_name, teacher, site = res
         else:
             logger.warning('No Next Lesson')
             return None
-        teacher, site_all = self._exec(sql_cou, (c_name, ))
-        site_list = site_all.split(',')
-        site = f'{site_list[0]}...' if len(site_list) > 1 else site_list[0]
 
         datetime_start = datetime.strptime(time_start, '%Y-%m-%d %H:%M:%S')
         interval = (datetime_start - datetime_now).total_seconds()
 
         logger.success(f'Get lesson data: {c_name}, {teacher}, {course_range}, {site}.')
         return interval, c_name, teacher, course_range, site
+
+    def lessosns_a_day(self, week):
+        sql = 'select course_range, c_name, teacher, site from sel where time_start between ? and ?'
+        date_today = datetime.combine(datetime.now().date(), time())
+        week_today = date_today.weekday()
+        date_s = date_today + timedelta(days=week - week_today)
+        date_e = date_s + timedelta(days=1)
+        return self._exec_all(sql, (date_s, date_e))

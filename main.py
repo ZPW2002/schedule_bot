@@ -1,6 +1,7 @@
+import json
 import websocket
 from websocket import WebSocketConnectionClosedException
-from function import thread_schedule_next
+from function import thread_schedule_next, recv_handle
 import time
 from loguru import logger
 from config import c
@@ -20,7 +21,7 @@ class Websocket_:
                 break
             except Exception as e:
                 logger.error(f'Websocket error: {e}')
-                time.sleep(5)
+                time.sleep(3)
 
     def send(self, *args, **kwargs):
         try:
@@ -32,7 +33,8 @@ class Websocket_:
     def recv_(self):
         while True:
             try:
-                self._ws.recv()
+                if post_data := recv_handle(json.loads(self._ws.recv())):
+                    self.send(post_data)
             except WebSocketConnectionClosedException as connect_e:
                 logger.error(connect_e)
                 self.connect()

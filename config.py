@@ -11,15 +11,16 @@ class Config:
         self.course_start = config_.get('course_start')
         self.send_target = config_.get('send_target')
         self.send_before = config_.get('send_before')
-        self._timetable = config_.get('timetable')
+        self.timetable = config_.get('timetable')
 
+        self.class_num = len(self.timetable)
         self.path = os.getcwd()
         self.font_path = "{}/source/HGY3_CNKI.TTF".format(self.path)
-        self.time_start = [time(*map(int, item[0].split(':'))) for item in self._timetable]
+        self.time_start = [time(*map(int, item[0].split(':'))) for item in self.timetable]
 
     def time_range(self, s):
         s, e = map(int, s.split('-'))
-        return '{}-{}'.format(self._timetable[s][0], self._timetable[e][1])
+        return '{}-{}'.format(self.timetable[s][0], self.timetable[e][1])
 
 
 c = Config()
