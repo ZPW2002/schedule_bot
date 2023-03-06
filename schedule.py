@@ -39,9 +39,9 @@ class Schedule:
     # 下一节课图片
     def sc_next(self):
         if not (data := self.db.next_lesson(c.send_before)):
-            return None
+            return
 
-        c_name, teacher, c_range, site = data[1:]
+        interval, c_name, teacher, c_range, site = data
         time_text = c.time_range(c_range)
         color = random.randint(0, 11)
         img = Image.open('{}/source/pictures/t{}.png'.format(c.path, color))
@@ -55,7 +55,7 @@ class Schedule:
         draw.text((150, 238), teacher, 'grey', _font(40))
         draw.text((150, 338), time_text, 'grey', _font(40))
         draw.text((150, 438), site, 'grey', _font(40))
-        return img
+        return img, interval
 
     # 周课程表图片
     def sc_week(self, has_weekend=False):
@@ -73,6 +73,7 @@ class Schedule:
             }
             for week_ in range(7)
         }
+        # 粘贴每节课的卡片图
         for week in range(7):
             for item in self.db.lessosns_a_day(week):
                 class_ = int(item[0].split('-')[0]) + 1
@@ -89,11 +90,6 @@ class Schedule:
         draw = ImageDraw.Draw(tar)
         draw.text((x_pos, 10), f'第{week_num}周', 'black', _font(2 * self.font_size))
         return tar
-
-    # 是否存在下一节课
-    def next_time(self):
-        if res := self.db.next_lesson(c.send_before):
-            return res[0]
 
     # 课程表背景图片
     def _table_background(self):
@@ -145,7 +141,7 @@ class Schedule:
         week_list()
         return img
 
-    # 每一节课的卡片
+    # 每一节课的卡片图
     def _lesson_unit(self, data, c_):
         c_light, c_dark = next(c_)
         width = self.cell_x

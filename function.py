@@ -1,4 +1,3 @@
-from time import strftime, gmtime
 from schedule import Schedule
 import json
 from threading import Timer as Timer_
@@ -6,45 +5,48 @@ from config import c
 from loguru import logger
 
 sc = Schedule()
-# sc.sc_week().save('1.png')
 
 
-def recv_handle(content):
-    def get_msg(key):
-        return content[key] if key in content else ''
+class Data_handle:
+    def __init__(self, recv_data):
+        self._recv_data = recv_data
+        self._data = dict()
+        self._target = {"action": 'send_msg', 'params': self._data}
+        self._message_type = self._recv_data.get('message_type')
+        self.msg_get = self._recv_data.get('message')
 
-    if get_msg('meta_event_type') == 'heartbeat':
-        return
-    logger.info(f'Get message: {str(content)}')
-    # print(content)
+        if self._message_type == 'private':
+            self._data['user_id'] = self._recv_data.get('user_id')
+        elif self._message_type == 'group':
+            self._data['group_id'] = self._recv_data.get('group_id')
+        # logger.info(f'{str(self._recv_data)}')
 
-    if get_msg('message_type') == 'group':
-        data = {'group_id': content['group_id']}
-    elif 'user_id' in content:
-        data = {'user_id': content['user_id']}
-    else:
-        return
+    def data_post(self):
+        return None if self.fliter_() else json.dumps(self._target)
 
-    if get_msg('message') == '课程表':
-        if img := sc.sc_week():
-            img.save("{}/source/pictures/schedule_week.png".format(c.path))
-            data['message'] = "[CQ:image,file=file:///{}/source/pictures/schedule_week.png]".format(c.path[1:])
+    def fliter_(self):
+        if any([
+            self._recv_data.get('meta_event_type') == 'heartbeat',
+            (self._message_type != 'private' and self._message_type != 'group'),
+            not self._data.get('message')
+        ]):
+            return True
 
-    if 'message' in data:
-        target = {"action": 'send_msg', 'params': data}
-        post_data = json.dumps(target)
-        return post_data
-    return
+    def msg_set(self, data):
+        self._data['message'] = data
+
+
+def recv_handle(data_get):
+    tar = Data_handle(data_get)
+
+    if tar.msg_get == '课程表':
+        tar.msg_set("[CQ:image,file=file:///{}/source/pictures/schedule_week.png]".format(c.path[1:]))
+
+    return tar.data_post()
 
 
 def thread_schedule_next(ws):
     def schedule_send():
-        try:
-            sc.sc_next().save("{}/source/pictures/schedule_next.png".format(c.path))
-        except Exception as e:
-            logger.error(e)
-            exit()
-
         def data_post(tar):
             total = {"action": 'send_msg'}
             data = {'message': "[CQ:image,file=file:///{}/source/pictures/schedule_next.png]".format(c.path[1:])}
@@ -58,10 +60,19 @@ def thread_schedule_next(ws):
         Timer(5, timer_set)
 
     def timer_set():
-        if data := sc.next_time():
-            Timer(data, schedule_send)
-            f_time = strftime('%dd %Hh %Mm %Ss', gmtime(data))
-            logger.info(f'Data will be sent after {f_time}')
+        def time_format(raw_time):
+            t = int(raw_time)
+            days = t // 86400
+            hours = (t - days * 86400) // 3600
+            minutes = (t - days * 86400 - hours * 3600) // 60
+            seconds = t % 60
+            return f'{days}d {hours}h {minutes}m {seconds}s'
+
+        if data := sc.sc_next():
+            data[0].save("{}/source/pictures/schedule_next.png".format(c.path))
+            Timer(data[1], schedule_send)
+            # f_time = strftime('%dd %Hh %Mm %Ss', gmtime(data[1]))
+            logger.info(f'Data will be sent after {time_format(data[1])}')
 
     def Timer(*args, **kwargs):
         _ = Timer_(*args, **kwargs)
