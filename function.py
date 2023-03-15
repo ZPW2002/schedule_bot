@@ -40,6 +40,7 @@ def recv_handle(data_get):
     tar = Data_handle(data_get)
 
     if tar.msg_get == '课程表':
+        sc.sc_week().save("./source/pictures/schedule_week.png")
         tar.msg_set("[CQ:image,file=file:///{}/source/pictures/schedule_week.png]".format(c.path[1:]))
 
     return tar.data_post()
