@@ -17,7 +17,7 @@ class Websocket_:
         while True:
             try:
                 self._ws = websocket.create_connection(self.host)
-                logger.success(f'Connect to {c.host}')
+                logger.success(f'Connect to {self.host}')
                 break
             except Exception as e:
                 logger.error(f'Websocket error: {e}')
