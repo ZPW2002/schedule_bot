@@ -20,7 +20,7 @@
 
 ------
 
-<img style="height:500px" src="http://150.158.139.2/markdown/sc_bot/2.png">
+![image](https://github.com/ZPW2002/schedule_bot/blob/main/preview.jpg)
 
 
 
