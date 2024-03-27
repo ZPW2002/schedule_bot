@@ -20,11 +20,11 @@
 
 ------
 
-<img style="height:500px" src="https://github.com/ZPW2002/schedule_bot/blob/main/img/preview.jpg">
+<img style="width:500px" src="https://github.com/ZPW2002/schedule_bot/blob/main/img/preview.jpg">
 
-<img style="height:500px" src="https://github.com/ZPW2002/schedule_bot/blob/main/img/schedule_next.png">
+<img style="width:500px" src="https://github.com/ZPW2002/schedule_bot/blob/main/img/schedule_next.png">
 
-<img style="height:500px" src="https://github.com/ZPW2002/schedule_bot/blob/main/img/schedule_week.png">
+<img style="width:500px" src="https://github.com/ZPW2002/schedule_bot/blob/main/img/schedule_week.png">
 
 
 
